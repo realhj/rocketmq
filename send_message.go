@@ -19,6 +19,11 @@ type SendMessageRequestHeader struct {
 	ReconsumeTimes        int    `json:"reconsumeTimes"`
 	UnitMode              bool   `json:"unitMode"`
 	MaxReconsumeTimes     int    `json:"maxReconsumeTimes"`
+	AccessSource          string `json:"accessSource,omitempty"`
+	AccessKey             string `json:"accessKey,omitempty"`
+	Timestamp             string `json:"timestamp,omitempty"`
+	RandomNum             string `json:"randomNum,omitempty"`
+	Signature             string `json:"signature,omitempty"`
 }
 
 type SendMessageService struct {

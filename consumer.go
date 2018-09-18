@@ -52,9 +52,10 @@ type DefaultConsumer struct {
 	rebalance        *Rebalance
 	remotingClient   RemotingClient
 	mqClient         *MqClient
+	rpcHook          RPCHook
 }
 
-func NewDefaultConsumer(consumerGroup string, conf *Config) (Consumer, error) {
+func NewDefaultConsumerWithRPCHook(consumerGroup string, conf *Config, rpcHook RPCHook) (Consumer, error) {
 	if conf == nil {
 		conf = &Config{
 			Namesrv:      os.Getenv("ROCKETMQ_NAMESVR"),
@@ -66,8 +67,8 @@ func NewDefaultConsumer(consumerGroup string, conf *Config) (Consumer, error) {
 		conf.ClientIp = DefaultIp
 	}
 
-	remotingClient := NewDefaultRemotingClient()
-	mqClient := NewMqClient()
+	remotingClient := NewDefaultRemotingClientWithRPCHOok(rpcHook)
+	mqClient := NewMqClientWithRPCHook(rpcHook)
 
 	rebalance := NewRebalance()
 	rebalance.groupName = consumerGroup
@@ -90,6 +91,7 @@ func NewDefaultConsumer(consumerGroup string, conf *Config) (Consumer, error) {
 		rebalance:        rebalance,
 		remotingClient:   remotingClient,
 		mqClient:         mqClient,
+		rpcHook:          rpcHook,
 	}
 
 	mqClient.consumerTable[consumerGroup] = consumer
@@ -102,6 +104,12 @@ func NewDefaultConsumer(consumerGroup string, conf *Config) (Consumer, error) {
 	pullMessageService.service = consumer
 
 	return consumer, nil
+}
+
+func NewDefaultConsumer(consumerGroup string, conf *Config) (Consumer, error) {
+
+
+	return NewDefaultConsumerWithRPCHook(consumerGroup,conf,nil)
 }
 
 func (c *DefaultConsumer) Start() error {

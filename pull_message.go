@@ -17,6 +17,11 @@ type PullMessageRequestHeader struct {
 	SuspendTimeoutMillis int64  `json:"suspendTimeoutMillis"`
 	Subscription         string `json:"subscription"`
 	SubVersion           int64  `json:"subVersion"`
+	AccessSource         string `json:"accessSource,omitempty"`
+	AccessKey            string `json:"accessKey,omitempty"`
+	Timestamp            string `json:"timestamp,omitempty"`
+	RandomNum            string `json:"randomNum,omitempty"`
+	Signature            string `json:"signature,omitempty"`
 }
 
 type Service interface {

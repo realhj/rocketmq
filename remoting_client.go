@@ -42,14 +42,21 @@ type DefaultRemotingClient struct {
 	responseTableLock sync.RWMutex
 	namesrvAddrList   []string
 	namesrvAddrChosen string
+	rpcHook           RPCHook
 }
 
-func NewDefaultRemotingClient() RemotingClient {
+func NewDefaultRemotingClientWithRPCHOok(rpcHook RPCHook) RemotingClient {
 	return &DefaultRemotingClient{
 		connTable:       make(map[string]net.Conn),
 		responseTable:   make(map[int32]*ResponseFuture),
 		namesrvAddrList: make([]string, 0),
+		rpcHook:         rpcHook,
 	}
+}
+
+
+func NewDefaultRemotingClient() RemotingClient {
+	return NewDefaultRemotingClientWithRPCHOok(nil)
 }
 
 func (d *DefaultRemotingClient) ScanResponseTable() {
@@ -141,6 +148,10 @@ func (d *DefaultRemotingClient) invokeSync(addr string, request *RemotingCommand
 		}
 	}
 
+	if d.rpcHook!=nil {
+		d.rpcHook.DoBeforeRequest(addr, request)
+	}
+
 	response := &ResponseFuture{
 		sendRequestOK:  false,
 		opaque:         request.Opaque,
@@ -183,6 +194,10 @@ func (d *DefaultRemotingClient) invokeAsync(addr string, request *RemotingComman
 		}
 	}
 
+	if d.rpcHook!=nil {
+		d.rpcHook.DoBeforeRequest(addr, request)
+	}
+
 	response := &ResponseFuture{
 		sendRequestOK:  false,
 		opaque:         request.Opaque,
@@ -216,6 +231,10 @@ func (d *DefaultRemotingClient) invokeOneway(addr string, request *RemotingComma
 			fmt.Println(err)
 			return err
 		}
+	}
+
+	if d.rpcHook!=nil {
+		d.rpcHook.DoBeforeRequest(addr, request)
 	}
 
 	request.markOnewayRPC()

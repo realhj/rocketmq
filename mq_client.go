@@ -16,6 +16,11 @@ import (
 
 type GetRouteInfoRequestHeader struct {
 	topic string
+	AccessSource         string `json:"accessSource,omitempty"`
+	AccessKey            string `json:"accessKey,omitempty"`
+	Timestamp            string `json:"timestamp,omitempty"`
+	RandomNum            string `json:"randomNum,omitempty"`
+	Signature            string `json:"signature,omitempty"`
 }
 
 func (g *GetRouteInfoRequestHeader) MarshalJSON() ([]byte, error) {
@@ -61,15 +66,21 @@ type MqClient struct {
 	pullMessageService  *PullMessageService
 	defaultProducer     *DefaultProducer
 	serviceState        int
+	rpcHook             RPCHook
 }
 
-func NewMqClient() *MqClient {
+func NewMqClientWithRPCHook(rpcHook RPCHook) *MqClient {
 	return &MqClient{
 		brokerAddrTable: make(map[string]map[string]string),
 		consumerTable:   make(map[string]*DefaultConsumer),
 		producerTable:   make(map[string]*DefaultProducer),
 		topicRouteTable: make(map[string]*TopicRouteData),
+		rpcHook:         rpcHook,
 	}
+}
+
+func NewMqClient() *MqClient {
+	return NewMqClientWithRPCHook(nil)
 }
 
 type slice interface {
@@ -191,6 +202,11 @@ func (m *MqClient) findConsumerIdList(topic string, groupName string) ([]string,
 
 type GetConsumerListByGroupRequestHeader struct {
 	ConsumerGroup string `json:"consumerGroup"`
+	AccessSource         string `json:"accessSource,omitempty"`
+	AccessKey            string `json:"accessKey,omitempty"`
+	Timestamp            string `json:"timestamp,omitempty"`
+	RandomNum            string `json:"randomNum,omitempty"`
+	Signature            string `json:"signature,omitempty"`
 }
 
 type GetConsumerListByGroupResponseBody struct {
@@ -210,7 +226,9 @@ func (m *MqClient) getConsumerIdListByGroup(addr string, consumerGroup string, t
 		Flag:      0,
 		ExtFields: requestHeader,
 	}
-
+	if m.rpcHook!=nil {
+		m.rpcHook.DoBeforeRequest(addr, request)
+	}
 	response, err := m.remotingClient.invokeSync(addr, request, timeoutMillis)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -575,6 +593,11 @@ type QueryConsumerOffsetRequestHeader struct {
 	ConsumerGroup string `json:"consumerGroup"`
 	Topic         string `json:"topic"`
 	QueueId       int32  `json:"queueId"`
+	AccessSource         string `json:"accessSource,omitempty"`
+	AccessKey            string `json:"accessKey,omitempty"`
+	Timestamp            string `json:"timestamp,omitempty"`
+	RandomNum            string `json:"randomNum,omitempty"`
+	Signature            string `json:"signature,omitempty"`
 }
 
 func (m *MqClient) queryConsumerOffset(addr string, requestHeader *QueryConsumerOffsetRequestHeader, timeoutMillis int64) (int64, error) {

@@ -54,9 +54,10 @@ type DefaultProducer struct {
 	retryAnotherBrokerWhenNotStoreOK bool
 	maxMessageSize                   int
 	vipChannelEnabled                bool
+	rpcHook                          RPCHook
 }
 
-func NewDefaultProducer(producerGroup string, conf *Config) (Producer, error) {
+func NewDefaultProducerWithRPCHook(producerGroup string, conf *Config, rpcHook RPCHook) (Producer, error) {
 	if conf == nil {
 		conf = &Config{
 			Namesrv:      os.Getenv("ROCKETMQ_NAMESVR"),
@@ -89,6 +90,7 @@ func NewDefaultProducer(producerGroup string, conf *Config) (Producer, error) {
 		retryTimesWhenSendAsyncFailed:    2,
 		retryAnotherBrokerWhenNotStoreOK: false,
 		maxMessageSize:                   1024 * 1024 * 4, // 4M
+		rpcHook:                          rpcHook,
 	}
 
 	mqClient.remotingClient = remotingClient
@@ -100,6 +102,12 @@ func NewDefaultProducer(producerGroup string, conf *Config) (Producer, error) {
 	pullMessageService.service = producer
 
 	return producer, nil
+}
+
+func NewDefaultProducer(producerGroup string, conf *Config) (Producer, error) {
+
+
+	return NewDefaultProducerWithRPCHook(producerGroup, conf, nil)
 }
 
 func (d *DefaultProducer) start(startFactory bool) (err error) {
@@ -372,6 +380,10 @@ func (d *DefaultProducer) sendMessage(addr string, brokerName string, msg *Messa
 	remotingCommand.Version = 79
 	remotingCommand.ExtFields = requestHeader
 	remotingCommand.Body = msg.Body
+
+	if d.rpcHook!=nil {
+		d.rpcHook.DoBeforeRequest(brokerName, remotingCommand)
+	}
 
 	switch communicationMode {
 	case Async:

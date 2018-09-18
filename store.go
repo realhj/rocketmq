@@ -92,6 +92,11 @@ type UpdateConsumerOffsetRequestHeader struct {
 	topic         string
 	queueId       int32
 	commitOffset  int64
+	AccessSource         string `json:"accessSource,omitempty"`
+	AccessKey            string `json:"accessKey,omitempty"`
+	Timestamp            string `json:"timestamp,omitempty"`
+	RandomNum            string `json:"randomNum,omitempty"`
+	Signature            string `json:"signature,omitempty"`
 }
 
 func (r *RemoteOffsetStore) updateConsumeOffsetToBroker(mq *MessageQueue, offset int64) error {
